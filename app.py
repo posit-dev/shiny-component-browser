@@ -7,7 +7,7 @@ import inspect
 import re
 
 from faicons import icon_svg
-
+from htmltools import css
 from shiny import App, reactive, render, ui
 from shiny.ui import fill
 
@@ -94,7 +94,19 @@ def demo_input(label):
             ui.navset_card_underline(
                 ui.nav(
                     "View",
-                    fill.as_fill_item(ui.div(eval(code), class_="demo")),
+                    fill.as_fillable_container(
+                        fill.as_fill_item(
+                            ui.div(
+                                eval(code),
+                                class_="demo",
+                                style=css(
+                                    min_height="150px",
+                                    align_items="center",
+                                    justify_content="center",
+                                ),
+                            )
+                        )
+                    ),
                 ),
                 ui.nav("Code", show_code(code)),
                 title=label,
@@ -267,8 +279,14 @@ def demo_output(fn_name, label):
         exec(code, globals(), local)
         func = local[fn_name]
         return ui.navset_card_underline(
-            ui.nav("View", func),
-            ui.nav("Code", show_code(code)),
+            ui.nav(
+                "View",
+                func,
+            ),
+            ui.nav(
+                "Code",
+                show_code(code),
+            ),
             title=label,
         )
 
@@ -463,7 +481,7 @@ app_ui = ui.page_sidebar(
                 i16,  # Password input
                 width=300,
                 fill=False,
-                heights_equal="all",
+                heights_equal="row",
                 gap=gap,
             ),
         ),
