@@ -354,6 +354,36 @@ def o_df_grid():
         return render.DataGrid(load_penguins(), height="300px", filters=True)
 
 
+def o_leaflet():
+    from shinywidgets import render_widget
+    import ipyleaflet
+    import json
+
+    # From http://eric.clst.org/Stuff/USGeoJSON and
+    # https://en.wikipedia.org/wiki/List_of_United_States_counties_and_county_equivalents
+    with open("nycounties.geojson") as f:
+        nycounties = json.load(f)
+
+    # Build {id: population} choropleth data
+    pop = {
+        id: props["pop"]
+        for id, props in [
+            (feat["id"], feat["properties"]) for feat in nycounties["features"]
+        ]
+    }
+
+    @render_widget
+    def leaflet_map():
+        m = ipyleaflet.Map(center=[42.8920, -76.0692], zoom=6)
+        choro = ipyleaflet.Choropleth(
+            geo_data=nycounties,
+            choro_data=pop,
+        )
+        m.add_layer(choro)
+
+        return m
+
+
 app_ui = ui.page_sidebar(
     ui.sidebar(open="always", width="0"),
     ui.tags.style(
@@ -463,6 +493,7 @@ app_ui = ui.page_sidebar(
                 demo_output("plot_plotly", "Plot (Plotly)")(o_plotly),
                 demo_output("datatable", "Data Table")(o_df_tbl),
                 demo_output("datagrid", "Data Grid")(o_df_grid),
+                demo_output("leaflet_map", "Map (ipyleaflet)")(o_leaflet),
                 demo_output("text", "Text")(o_txt),
                 demo_output("dynamic_ui", "UI objects/HTML")(o_ui),
                 width=450,
@@ -484,6 +515,7 @@ def server(input, output, session):
     o_plotly()
     o_df_tbl()
     o_df_grid()
+    o_leaflet()
 
 
 app = App(app_ui, server)
