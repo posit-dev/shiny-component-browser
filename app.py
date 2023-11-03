@@ -11,7 +11,7 @@ from faicons import icon_svg
 from shiny import App, reactive, render, ui
 from shiny.ui import fill
 
-gap = "2rem"
+gap = "var(--bs-gutter-x)"
 counter = 0
 
 
@@ -346,7 +346,7 @@ app_ui = ui.page_sidebar(
             "hr { visibility: hidden; }"
         )
     ),
-    ui.h1("Shiny Component Gallery", class_="display-3"),
+    ui.h1("Shiny Components", class_="display-3"),
     ui.row(
         ui.column(
             9,
@@ -450,6 +450,7 @@ app_ui = ui.page_sidebar(
             ),
         ),
     ),
+    window_title="Shiny Components",
 )
 
 
