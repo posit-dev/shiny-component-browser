@@ -1,7 +1,9 @@
 faicons
 shiny
+shinywidgets
 black
 matplotlib
 seaborn
 pandas
 palmerpenguins
+plotly

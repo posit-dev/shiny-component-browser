@@ -278,7 +278,7 @@ def demo_output(fn_name, label):
 # OUTPUTS
 
 
-def o1():
+def o_plt():
     import matplotlib.pyplot as plt
 
     @render.plot(height=300)
@@ -286,7 +286,7 @@ def o1():
         plt.scatter(x=[1, 2, 3], y=[3, 2, 1])
 
 
-def o2():
+def o_sns():
     import seaborn as sns
 
     @render.plot(height=300)
@@ -294,7 +294,28 @@ def o2():
         sns.lineplot(x=[1, 2, 3], y=[12, 4, 8])
 
 
-def o3():
+def o_plotly():
+    from shinywidgets import render_widget
+    import plotly.express as px
+
+    @render_widget
+    def plot_plotly():
+        # From https://plotly.com/python/distplot/
+
+        df = px.data.tips()
+        fig = px.histogram(
+            df,
+            x="total_bill",
+            y="tip",
+            color="sex",
+            marginal="rug",
+            hover_data=df.columns,
+        )
+        fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+        return fig
+
+
+def o_txt():
     from datetime import datetime
 
     @render.text
@@ -303,7 +324,7 @@ def o3():
         return f"The current time is {datetime.now().strftime('%H:%M:%S')}"
 
 
-def o4():
+def o_ui():
     from datetime import datetime
 
     @render.ui
@@ -315,7 +336,7 @@ def o4():
         )
 
 
-def o5():
+def o_df_tbl():
     from palmerpenguins import load_penguins
 
     @render.data_frame
@@ -325,7 +346,7 @@ def o5():
         return render.DataTable(df, height="300px")
 
 
-def o6():
+def o_df_grid():
     from palmerpenguins import load_penguins
 
     @render.data_frame
@@ -437,12 +458,13 @@ app_ui = ui.page_sidebar(
         ui.column(
             9,
             ui.layout_column_wrap(
-                demo_output("plot_mpl", "Plot (matplotlib)")(o1),
-                demo_output("plot_sns", "Plot (Seaborn)")(o2),
-                demo_output("datatable", "Data Table")(o5),
-                demo_output("datagrid", "Data Grid")(o6),
-                demo_output("text", "Text")(o3),
-                demo_output("dynamic_ui", "UI objects/HTML")(o4),
+                demo_output("plot_mpl", "Plot (matplotlib)")(o_plt),
+                demo_output("plot_sns", "Plot (Seaborn)")(o_sns),
+                demo_output("plot_plotly", "Plot (Plotly)")(o_plotly),
+                demo_output("datatable", "Data Table")(o_df_tbl),
+                demo_output("datagrid", "Data Grid")(o_df_grid),
+                demo_output("text", "Text")(o_txt),
+                demo_output("dynamic_ui", "UI objects/HTML")(o_ui),
                 width=450,
                 fill=False,
                 heights_equal="row",
@@ -455,12 +477,13 @@ app_ui = ui.page_sidebar(
 
 
 def server(input, output, session):
-    o3()  # Data Table
-    o4()  # Data Grid
-    o1()  # Plot (matplotlib)
-    o2()  # Plot (Seaborn)
-    o5()  # Text
-    o6()  # UI
+    o_txt()
+    o_ui()
+    o_plt()
+    o_sns()
+    o_plotly()
+    o_df_tbl()
+    o_df_grid()
 
 
 app = App(app_ui, server)
