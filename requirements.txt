@@ -1,0 +1,7 @@
+faicons
+shiny
+black
+matplotlib
+seaborn
+pandas
+palmerpenguins
