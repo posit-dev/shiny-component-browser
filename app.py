@@ -70,6 +70,18 @@ def show_code(code):
     )
 
 
+def nav_link(label, href):
+    return ui.nav_control(
+        {"class": "nav-item"},
+        ui.a(
+            label,
+            class_="nav-link",
+            href=href,
+            target="_blank",
+        ),
+    )
+
+
 def demo_input(label):
     def wrapper(fn):
         code = inspect.getsource(fn)
@@ -353,7 +365,7 @@ app_ui = ui.page_sidebar(
         )
     ),
     ui.hr(),
-    ui.h2("Inputs"),
+    ui.h2("Inputs", id="inputs"),
     ui.row(
         ui.column(
             3,
@@ -406,7 +418,7 @@ app_ui = ui.page_sidebar(
         ),
     ),
     ui.hr(),
-    ui.h2("Outputs"),
+    ui.h2("Outputs", id="outputs"),
     ui.row(
         ui.column(
             3,
@@ -415,7 +427,10 @@ app_ui = ui.page_sidebar(
                 Use outputs to display information to the user, usually
                 reflecting choices they've made using inputs.
 
-                Each output is a function that's decorated
+                Each output is a function that is adorned with a render
+                decorator, like `@render.plot` or `@render.data_frame`. The
+                function should return an object to be displayed; each render
+                decorator expects a different type of object.
                 """
             ),
         ),
