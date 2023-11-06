@@ -2,79 +2,46 @@
 This entire app is crazily structured, for $REASONS. It's not a good example of
 how to write Shiny apps!!
 """
-import ast
 import inspect
-import re
 
 from faicons import icon_svg
 from htmltools import css
-from shiny import App, reactive, render, ui
+from shiny import App, ui
 from shiny.ui import fill
-from example_inputs import *
-from example_outputs import *
+from example_inputs import (
+    i_action_btn,
+    i_action_link,
+    i_checkbox,
+    i_checkbox_group,
+    i_date,
+    i_date_range,
+    i_numeric,
+    i_radio,
+    i_native_select,
+    i_native_select_multi,
+    i_selectize,
+    i_selectize_multi,
+    i_slider_single,
+    i_slider_range,
+    i_switch,
+    i_text,
+    i_textarea,
+    i_password,
+)
+from example_outputs import (
+    o_plt,
+    o_sns,
+    o_plotly,
+    o_df_tbl,
+    o_df_grid,
+    o_leaflet,
+    o_txt,
+    o_ui,
+)
+from codeutils import format_code, find_decorated_function_name
 
 gap = "var(--bs-gutter-x)"
 counter = 0
-
-
-def extract_code(code: str):
-    """Get just the body of a function, without the signature or docstring."""
-
-    lines = code.splitlines()
-    # Remove decorators
-    while lines[0].strip().startswith("@"):
-        lines.pop(0)
-    # Remove function signature
-    assert lines[0].strip().startswith("def ")
-    lines.pop(0)
-    # Remove docstring
-    if lines[0].strip().startswith('"') and lines[0].strip().endswith('"'):
-        lines.pop(0)
-        if lines[0].strip() == "":
-            lines.pop(0)
-    return "\n".join(lines)
-
-
-def strip_indent(code: str):
-    """Remove the most amount of indent possible from a block of code."""
-
-    def min_indent(lines: list[str]):
-        ws = [re.search(r"^\s*", line).group(0) for line in lines if line.strip() != ""]
-        # Make sure it's either \t, or " ", not both
-        space = False
-        tab = False
-        min = ""
-        for x in ws:
-            space = space or " " in x
-            tab = tab or "\t" in x
-            if min == "" or len(x) < len(min):
-                min = x
-        if space and tab:
-            raise ValueError("Mixed tabs and spaces")
-        return min
-
-    lines = code.splitlines()
-    indent = min_indent(lines)
-    code = "\n".join(lines)
-    code = re.sub(f"^{indent}", "", code, flags=re.MULTILINE)
-    return code
-
-
-def format_code(code: str):
-    import black
-
-    code = extract_code(code)
-    code = strip_indent(code)
-
-    mode = black.FileMode()
-    mode.line_length = 50
-    fast = False
-    try:
-        code = black.format_file_contents(code, fast=fast, mode=mode)
-    except Exception:
-        print(code)
-        raise
-    return re.sub(r"\n{3,}", "\n\n", code)
 
 
 def show_code(code):
@@ -133,26 +100,13 @@ def demo_input(fn):
     )
 
 
-local = locals()
-
-
-def find_decorated_function_name(code):
-    """Given valid Python source code, find the name of the first function that
-    has one or more decorators."""
-
-    tree = ast.parse(code)
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef):
-            if len(node.decorator_list) > 0:
-                return node.name
-    raise ValueError("No decorated functions found in code")
-
-
 def demo_output(fn):
+    local = dict()
+
     label = fn.__doc__.strip()
     code = inspect.getsource(fn)
     code = format_code(code)
-    exec(code, globals(), local)
+    exec("from shiny import render\n" + code, globals(), local)
 
     fn_name = find_decorated_function_name(code)
 
