@@ -1,7 +1,3 @@
-"""
-This entire app is crazily structured, for $REASONS. It's not a good example of
-how to write Shiny apps!!
-"""
 import inspect
 
 from faicons import icon_svg
