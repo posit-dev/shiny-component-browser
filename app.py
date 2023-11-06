@@ -4,23 +4,12 @@ from faicons import icon_svg
 from htmltools import css
 from shiny import App, ui
 from shiny.ui import fill
-import example_inputs
-import example_outputs
+from example_inputs import all_inputs
+from example_outputs import all_outputs
 from codeutils import format_code, find_decorated_function_name
 
 gap = "var(--bs-gutter-x)"
 counter = 0
-
-all_inputs = [
-    getattr(example_inputs, name)
-    for name in example_inputs.__all__
-    if name.startswith("i_")
-]
-all_outputs = [
-    getattr(example_outputs, name)
-    for name in example_outputs.__all__
-    if name.startswith("o_")
-]
 
 
 def show_code(code):

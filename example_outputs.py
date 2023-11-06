@@ -125,7 +125,7 @@ def o_leaflet():
         return m
 
 
-__all__ = []
+all_outputs = []
 for name, obj in inspect.getmembers(sys.modules[__name__]):
-    if not name.startswith("_"):
-        __all__.append(name)
+    if name.startswith("o_"):
+        all_outputs.append(obj)

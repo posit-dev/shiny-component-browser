@@ -174,7 +174,7 @@ def i_action_link():
     )
 
 
-__all__ = []
+all_inputs = []
 for name, obj in inspect.getmembers(sys.modules[__name__]):
-    if not name.startswith("_"):
-        __all__.append(name)
+    if name.startswith("i_"):
+        all_inputs.append(obj)
