@@ -1,0 +1,22 @@
+/* Strip input labels; we want them in the source code but not in the preview */
+.demo > .shiny-input-container > label {
+  display: none;
+}
+
+h3.label {
+  font-size: 1.2em;
+  margin-bottom: 1.2em;
+}
+
+/* Hide sidebar */
+aside {
+  display: none;
+}
+.bslib-sidebar-layout > .main {
+  grid-column: unset;
+}
+
+/* Turn hr into just space */
+hr {
+  visibility: hidden;
+}

@@ -8,40 +8,23 @@ from faicons import icon_svg
 from htmltools import css
 from shiny import App, ui
 from shiny.ui import fill
-from example_inputs import (
-    i_action_btn,
-    i_action_link,
-    i_checkbox,
-    i_checkbox_group,
-    i_date,
-    i_date_range,
-    i_numeric,
-    i_radio,
-    i_native_select,
-    i_native_select_multi,
-    i_selectize,
-    i_selectize_multi,
-    i_slider_single,
-    i_slider_range,
-    i_switch,
-    i_text,
-    i_textarea,
-    i_password,
-)
-from example_outputs import (
-    o_plt,
-    o_sns,
-    o_plotly,
-    o_df_tbl,
-    o_df_grid,
-    o_leaflet,
-    o_txt,
-    o_ui,
-)
+import example_inputs
+import example_outputs
 from codeutils import format_code, find_decorated_function_name
 
 gap = "var(--bs-gutter-x)"
 counter = 0
+
+all_inputs = [
+    getattr(example_inputs, name)
+    for name in example_inputs.__all__
+    if name.startswith("i_")
+]
+all_outputs = [
+    getattr(example_outputs, name)
+    for name in example_outputs.__all__
+    if name.startswith("o_")
+]
 
 
 def show_code(code):
@@ -68,7 +51,7 @@ def nav_link(label, href):
     )
 
 
-def demo_input(fn):
+def preview_input(fn):
     code = inspect.getsource(fn)
     code = format_code(code)
     label = fn.__doc__.strip()
@@ -100,13 +83,18 @@ def demo_input(fn):
     )
 
 
-def demo_output(fn):
+def preview_output(fn):
     local = dict()
 
     label = fn.__doc__.strip()
     code = inspect.getsource(fn)
     code = format_code(code)
-    exec("from shiny import render\n" + code, globals(), local)
+    exec(
+        # Need to add implied imports to the code
+        "from shiny import render, reactive, ui\n" + code,
+        dict(),
+        local,
+    )
 
     fn_name = find_decorated_function_name(code)
 
@@ -126,17 +114,7 @@ def demo_output(fn):
 
 app_ui = ui.page_sidebar(
     ui.sidebar(open="always", width="0"),
-    ui.tags.style(
-        ui.HTML(
-            # ".demo>.shiny-input-container>label, h3.label { font-size: 1.2em; margin-bottom: 1.2em; }"
-            ".demo>.shiny-input-container>label { display: none; }"
-            "h3.label { font-size: 1.2em; margin-bottom: 1.2em; }"
-            ".demo-output { background-color: var(--bs-gray-100); }"
-            "aside { display: none; }"
-            ".bslib-sidebar-layout>.main { grid-column: unset; }"
-            "hr { visibility: hidden; }"
-        )
-    ),
+    ui.include_css("styles.css"),
     ui.h1("Shiny Components", class_="display-3"),
     ui.row(
         ui.column(
@@ -183,24 +161,7 @@ app_ui = ui.page_sidebar(
         ui.column(
             9,
             ui.layout_column_wrap(
-                demo_input(i_action_btn),
-                demo_input(i_action_link),
-                demo_input(i_checkbox),
-                demo_input(i_checkbox_group),
-                demo_input(i_date),
-                demo_input(i_date_range),
-                demo_input(i_numeric),
-                demo_input(i_radio),
-                demo_input(i_native_select),
-                demo_input(i_native_select_multi),
-                demo_input(i_selectize),
-                demo_input(i_selectize_multi),
-                demo_input(i_slider_single),
-                demo_input(i_slider_range),
-                demo_input(i_switch),
-                demo_input(i_text),
-                demo_input(i_textarea),
-                demo_input(i_password),
+                *[preview_input(i) for i in all_inputs],
                 width=300,
                 fill=False,
                 heights_equal="row",
@@ -228,14 +189,7 @@ app_ui = ui.page_sidebar(
         ui.column(
             9,
             ui.layout_column_wrap(
-                demo_output(o_plt),
-                demo_output(o_sns),
-                demo_output(o_plotly),
-                demo_output(o_df_tbl),
-                demo_output(o_df_grid),
-                demo_output(o_leaflet),
-                demo_output(o_txt),
-                demo_output(o_ui),
+                *[preview_output(o) for o in all_outputs],
                 width=450,
                 fill=False,
                 heights_equal="row",
@@ -248,14 +202,7 @@ app_ui = ui.page_sidebar(
 
 
 def server(input, output, session):
-    o_txt()
-    o_ui()
-    o_plt()
-    o_sns()
-    o_plotly()
-    o_df_tbl()
-    o_df_grid()
-    o_leaflet()
+    [o() for o in all_outputs]
 
 
 app = App(app_ui, server)
