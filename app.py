@@ -15,7 +15,27 @@ gap = "var(--bs-gutter-x)"
 counter = 0
 
 
+def extract_code(code: str):
+    """Get just the body of a function, without the signature or docstring."""
+
+    lines = code.splitlines()
+    # Remove decorators
+    while lines[0].strip().startswith("@"):
+        lines.pop(0)
+    # Remove function signature
+    assert lines[0].strip().startswith("def ")
+    lines.pop(0)
+    # Remove docstring
+    if lines[0].strip().startswith('"') and lines[0].strip().endswith('"'):
+        lines.pop(0)
+        if lines[0].strip() == "":
+            lines.pop(0)
+    return "\n".join(lines)
+
+
 def strip_indent(code: str):
+    """Remove the most amount of indent possible from a block of code."""
+
     def min_indent(lines: list[str]):
         ws = [re.search(r"^\s*", line).group(0) for line in lines if line.strip() != ""]
         # Make sure it's either \t, or " ", not both
@@ -32,10 +52,6 @@ def strip_indent(code: str):
         return min
 
     lines = code.splitlines()
-    while lines[0].strip().startswith("@"):
-        lines.pop(0)
-    assert lines[0].strip().startswith("def ")
-    lines.pop(0)
     indent = min_indent(lines)
     code = "\n".join(lines)
     code = re.sub(f"^{indent}", "", code, flags=re.MULTILINE)
@@ -45,6 +61,7 @@ def strip_indent(code: str):
 def format_code(code: str):
     import black
 
+    code = extract_code(code)
     code = strip_indent(code)
 
     mode = black.FileMode()
@@ -82,61 +99,62 @@ def nav_link(label, href):
     )
 
 
-def demo_input(label):
-    def wrapper(fn):
-        code = inspect.getsource(fn)
-        code = format_code(code)
+def demo_input(fn):
+    code = inspect.getsource(fn)
+    code = format_code(code)
+    label = fn.__doc__.strip()
 
-        global counter
-        counter += 1
+    global counter
+    counter += 1
 
-        return ui.TagList(
-            ui.navset_card_underline(
-                ui.nav(
-                    "View",
-                    fill.as_fillable_container(
-                        fill.as_fill_item(
-                            ui.div(
-                                eval(code),
-                                class_="demo",
-                                style=css(
-                                    min_height="150px",
-                                    align_items="center",
-                                    justify_content="center",
-                                ),
-                            )
+    return ui.TagList(
+        ui.navset_card_underline(
+            ui.nav(
+                "View",
+                fill.as_fillable_container(
+                    fill.as_fill_item(
+                        ui.div(
+                            eval(code),
+                            class_="demo",
+                            style=css(
+                                min_height="150px",
+                                align_items="center",
+                                justify_content="center",
+                            ),
                         )
-                    ),
+                    )
                 ),
-                ui.nav("Code", show_code(code)),
-                title=label,
-            )
+            ),
+            ui.nav("Code", show_code(code)),
+            title=label,
         )
-
-    return wrapper
-
-
-# @demo_input("Select box (single value)")
-# def i1():
-#     ui.input_select(
-#         "select_one",
-#         label="Select box (single value)",
-#         choices=["A", "B", "C"],
-#     )
+    )
 
 
-# @demo_input("Select box (multi value)")
-# def i2():
-#     ui.input_select(
-#         "select_multi",
-#         label="Select box (multi value)",
-#         choices=["A", "B", "C"],
-#         multiple=True,
-#     )
+def i_native_select():
+    "Select box (single value)"
+
+    ui.input_select(
+        "select_one",
+        label="Select box (single value)",
+        choices=["A", "B", "C"],
+    )
 
 
-@demo_input("Select input (single value)")
-def i3():
+def i_native_select_multi():
+    "Select box (multi value)"
+
+    ui.input_select(
+        "select_multi",
+        label="Select box (multi value)",
+        choices=["A", "B", "C"],
+        multiple=True,
+    )
+
+
+def i_selectize():
+    "Select input (single value)"
+
     ui.input_selectize(
         "selectize_one",
         label="Selectize (single value)",
@@ -144,8 +162,9 @@ def i3():
     )
 
 
-@demo_input("Select input (multi value)")
-def i4():
+def i_selectize_multi():
+    "Select input (multi value)"
+
     ui.input_selectize(
         "selectize_multi",
         label="Selectize (multi value)",
@@ -154,8 +173,9 @@ def i4():
     )
 
 
-@demo_input("Slider (single value)")
-def i5():
+def i_slider_single():
+    "Slider (single value)"
+
     ui.input_slider(
         "slider_single",
         label="Slider (single value)",
@@ -166,8 +186,9 @@ def i5():
     )
 
 
-@demo_input("Slider (range)")
-def i6():
+def i_slider_range():
+    "Slider (range)"
+
     ui.input_slider(
         "slider_range",
         label="Slider (range)",
@@ -177,8 +198,9 @@ def i6():
     )
 
 
-@demo_input("Date input")
-def i7():
+def i_date():
+    "Date input"
+
     ui.input_date(
         "date",
         label="Date input",
@@ -186,8 +208,9 @@ def i7():
     )
 
 
-@demo_input("Date range input")
-def i8():
+def i_date_range():
+    "Date range input"
+
     ui.input_date_range(
         "date_range",
         label="Date range input",
@@ -197,8 +220,9 @@ def i8():
     )
 
 
-@demo_input("Checkbox input")
-def i9():
+def i_checkbox():
+    "Checkbox input"
+
     ui.input_checkbox(
         "checkbox",
         label="Checkbox input",
@@ -206,8 +230,9 @@ def i9():
     )
 
 
-@demo_input("Checkbox group input")
-def i10():
+def i_checkbox_group():
+    "Checkbox group input"
+
     ui.input_checkbox_group(
         "checkbox_group",
         label="Checkbox group input",
@@ -216,30 +241,35 @@ def i10():
     )
 
 
-@demo_input("Switch input")
-def i11():
+def i_switch():
+    "Switch input"
+
     ui.input_switch("switch", label="Switch input", value=True)
 
 
-@demo_input("Radio buttons")
-def i12():
+def i_radio():
+    "Radio buttons"
+
     ui.input_radio_buttons(
         "radio", label="Radio buttons", choices=["A", "B", "C"], selected="A"
     )
 
 
-@demo_input("Numeric input")
-def i13():
+def i_numeric():
+    "Numeric input"
+
     ui.input_numeric("numeric", label="Numeric input", value=5)
 
 
-@demo_input("Text input")
-def i14():
+def i_text():
+    "Text input"
+
     ui.input_text("text", label="Text input", value="Hello, world!")
 
 
-@demo_input("Multi-line text input")
-def i15():
+def i_textarea():
+    "Multi-line text input"
+
     ui.input_text_area(
         "textarea",
         label="Multi-line text input",
@@ -248,21 +278,24 @@ def i15():
     )
 
 
-@demo_input("Password input")
-def i16():
+def i_password():
+    "Password input"
+
     ui.input_password("password", label="Password input")
 
 
-@demo_input("Action button")
-def i17():
+def i_action_btn():
+    "Action button"
+
     ui.input_action_button(
         "action_button",
         label="Recalculate",
     )
 
 
-@demo_input("Action link")
-def i18():
+def i_action_link():
+    "Action link"
+
     ui.input_action_link(
         "action_link",
         label="Continue",
@@ -272,25 +305,22 @@ def i18():
 local = locals()
 
 
-def demo_output(fn_name, label):
-    def wrapper(fn):
-        code = inspect.getsource(fn)
-        code = format_code(code)
-        exec(code, globals(), local)
-        func = local[fn_name]
-        return ui.navset_card_underline(
-            ui.nav(
-                "View",
-                func,
-            ),
-            ui.nav(
-                "Code",
-                show_code(code),
-            ),
-            title=label,
-        )
-
-    return wrapper
+def demo_output(fn_name, label, fn):
+    code = inspect.getsource(fn)
+    code = format_code(code)
+    exec(code, globals(), local)
+    func = local[fn_name]
+    return ui.navset_card_underline(
+        ui.nav(
+            "View",
+            func,
+        ),
+        ui.nav(
+            "Code",
+            show_code(code),
+        ),
+        title=label,
+    )
 
 
 # OUTPUTS
@@ -461,24 +491,24 @@ app_ui = ui.page_sidebar(
         ui.column(
             9,
             ui.layout_column_wrap(
-                i17,  # Action button
-                i18,  # Action link
-                i9,  # Checkbox input
-                i10,  # Checkbox group
-                i7,  # Date input
-                i8,  # Date range input
-                i13,  # Numeric input
-                # i1,  # Select box (single value)
-                # i2,  # Select box (multi value)
-                i12,  # Radio buttons
-                i3,  # Selectize (single value)
-                i4,  # Selectize (multi value)
-                i5,  # Slider (single value)
-                i6,  # Slider (range)
-                i11,  # Switch input
-                i14,  # Text input
-                i15,  # Multi-line text input
-                i16,  # Password input
+                demo_input(i_action_btn),
+                demo_input(i_action_link),
+                demo_input(i_checkbox),
+                demo_input(i_checkbox_group),
+                demo_input(i_date),
+                demo_input(i_date_range),
+                demo_input(i_numeric),
+                demo_input(i_radio),
+                demo_input(i_native_select),
+                demo_input(i_native_select_multi),
+                demo_input(i_selectize),
+                demo_input(i_selectize_multi),
+                demo_input(i_slider_single),
+                demo_input(i_slider_range),
+                demo_input(i_switch),
+                demo_input(i_text),
+                demo_input(i_textarea),
+                demo_input(i_password),
                 width=300,
                 fill=False,
                 heights_equal="row",
@@ -506,14 +536,14 @@ app_ui = ui.page_sidebar(
         ui.column(
             9,
             ui.layout_column_wrap(
-                demo_output("plot_mpl", "Plot (matplotlib)")(o_plt),
-                demo_output("plot_sns", "Plot (Seaborn)")(o_sns),
-                demo_output("plot_plotly", "Plot (Plotly)")(o_plotly),
-                demo_output("datatable", "Data Table")(o_df_tbl),
-                demo_output("datagrid", "Data Grid")(o_df_grid),
-                demo_output("leaflet_map", "Map (ipyleaflet)")(o_leaflet),
-                demo_output("text", "Text")(o_txt),
-                demo_output("dynamic_ui", "UI objects/HTML")(o_ui),
+                demo_output("plot_mpl", "Plot (matplotlib)", o_plt),
+                demo_output("plot_sns", "Plot (Seaborn)", o_sns),
+                demo_output("plot_plotly", "Plot (Plotly)", o_plotly),
+                demo_output("datatable", "Data Table", o_df_tbl),
+                demo_output("datagrid", "Data Grid", o_df_grid),
+                demo_output("leaflet_map", "Map (ipyleaflet)", o_leaflet),
+                demo_output("text", "Text", o_txt),
+                demo_output("dynamic_ui", "UI objects/HTML", o_ui),
                 width=450,
                 fill=False,
                 heights_equal="row",
