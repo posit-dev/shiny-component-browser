@@ -1,11 +1,13 @@
 import re
 import ast
+import textwrap
 
 
 def extract_code(code: str):
     """Get just the body of a function, without the signature or docstring."""
 
     lines = code.splitlines()
+
     # Remove decorators
     while lines[0].strip().startswith("@"):
         lines.pop(0)
@@ -20,36 +22,11 @@ def extract_code(code: str):
     return "\n".join(lines)
 
 
-def strip_indent(code: str):
-    """Remove the most amount of indent possible from a block of code."""
-
-    def min_indent(lines: list[str]):
-        ws = [re.search(r"^\s*", line).group(0) for line in lines if line.strip() != ""]
-        # Make sure it's either \t, or " ", not both
-        space = False
-        tab = False
-        min = ""
-        for x in ws:
-            space = space or " " in x
-            tab = tab or "\t" in x
-            if min == "" or len(x) < len(min):
-                min = x
-        if space and tab:
-            raise ValueError("Mixed tabs and spaces")
-        return min
-
-    lines = code.splitlines()
-    indent = min_indent(lines)
-    code = "\n".join(lines)
-    code = re.sub(f"^{indent}", "", code, flags=re.MULTILINE)
-    return code
-
-
 def format_code(code: str):
     import black
 
     code = extract_code(code)
-    code = strip_indent(code)
+    code = textwrap.dedent(code)
 
     mode = black.FileMode()
     mode.line_length = 50
